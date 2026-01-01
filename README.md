@@ -183,6 +183,124 @@ All errors conform to `LocalizedError` with:
 - `failureReason`: Why the error occurred
 - `recoverySuggestion`: How to fix the issue
 
+### 💾 Storage Layer
+
+Thread-safe storage solutions for local data persistence with UserDefaults and Keychain.
+
+#### UserDefaults Storage
+
+Thread-safe wrapper around UserDefaults with protocol conformance:
+
+```swift
+let storage = UserDefaultsStorage()
+
+// Save primitives
+try storage.save("John", forKey: "username")
+try storage.save(42, forKey: "age")
+
+// Save Codable objects
+try storage.save(user, forKey: "current_user")
+
+// Retrieve with type safety
+let name: String? = try storage.get(forKey: "username")
+let user: User? = try storage.get(forKey: "current_user")
+
+// Batch operations
+try storage.saveBatch(["key1": "value1", "key2": "value2"])
+storage.deleteBatch(forKeys: ["key1", "key2"])
+```
+
+#### @UserDefault Property Wrapper
+
+Type-safe property wrapper that works outside SwiftUI (unlike `@AppStorage`):
+
+```swift
+class Settings {
+    @UserDefault(key: "hasSeenOnboarding", defaultValue: false)
+    static var hasSeenOnboarding: Bool
+    
+    @UserDefault(key: "username", defaultValue: "Guest")
+    static var username: String
+    
+    @OptionalUserDefault(key: "apiToken")
+    static var apiToken: String?
+}
+
+// Usage
+Settings.hasSeenOnboarding = true
+print(Settings.username)  // "Guest"
+```
+
+**Features:**
+- Works with primitives (String, Int, Double, Bool, Data)
+- Codable support for complex types
+- Optional variant with `@OptionalUserDefault`
+- `reset()` and `hasValue` helpers
+
+#### Keychain Storage
+
+Secure, actor-based storage for sensitive data:
+
+```swift
+let keychain = KeychainStorage()
+
+// Save credentials securely
+try await keychain.save("secret_password", forKey: "password")
+try await keychain.save(credentials, forKey: "auth_credentials")
+
+// Retrieve
+let password: String? = try await keychain.getString(forKey: "password")
+let creds: Credentials? = try await keychain.get(forKey: "auth_credentials")
+
+// Batch operations
+try await keychain.saveBatch(["key1": data1, "key2": data2])
+try await keychain.deleteBatch(forKeys: ["key1", "key2"])
+
+// Query all keys
+let allKeys = try await keychain.allKeys()
+
+// Delete all
+try await keychain.deleteAll()
+```
+
+**Features:**
+- Actor-based for automatic thread safety
+- Async/await support
+- Access group support for app extensions
+- Accessibility options (whenUnlocked, afterFirstUnlock, etc.)
+- Comprehensive error handling with `KeychainError`
+
+#### Storage Protocols
+
+Generic protocols for abstraction and dependency injection:
+
+```swift
+// Use any storage implementation
+func saveUser(_ user: User, to storage: any StorageProvider) throws {
+    try storage.save(user, forKey: "user")
+}
+
+// Switch implementations easily
+let memoryStorage = InMemoryStorage()  // For testing
+let userDefaultsStorage = UserDefaultsStorage()  // For production
+
+// Type-safe keys
+enum StorageKeys: String, StorageKey {
+    case username
+    case theme
+    
+    var key: String { rawValue }
+}
+
+try storage.save("John", forKey: StorageKeys.username)
+```
+
+**Available Protocols:**
+- `StorageProvider` - Synchronous storage interface
+- `AsyncStorageProvider` - Async/await storage interface
+- `KeychainStorable` - Keychain-specific operations
+- `StorageKey` - Type-safe storage keys
+
 ## Installation
 
 ### Swift Package Manager
@@ -219,7 +337,7 @@ All extensions and utilities are immediately available.
 
 ## Testing
 
-The package includes comprehensive unit tests (147 tests, all passing).
+The package includes comprehensive unit tests (197 tests, 191 passing).
 
 Run tests with:
 
