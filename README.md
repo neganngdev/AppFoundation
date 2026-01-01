@@ -422,6 +422,109 @@ let response: UploadResponse = try await client.uploadMultipart(
 - Multipart file uploads
 - Protocol-based for easy mocking
 
+### 📊 Analytics System
+
+Privacy-first analytics with support for multiple providers.
+
+#### Analytics Manager
+
+Actor-based singleton for managing analytics:
+
+```swift
+// Register providers
+await AnalyticsManager.shared.register(provider: FirebaseAnalyticsProvider())
+await AnalyticsManager.shared.register(provider: ConsoleAnalyticsProvider())
+
+// Track events
+await AnalyticsManager.shared.trackEvent(name: "button_tapped", parameters: ["button_id": "purchase"])
+await AnalyticsManager.shared.trackEvent(.buttonTapped(id: "purchase"))
+
+// Track screens
+await AnalyticsManager.shared.trackScreen(name: "HomeScreen")
+
+// User management
+await AnalyticsManager.shared.setUserId("user123")
+await AnalyticsManager.shared.setUserProperty(name: "plan", value: "premium")
+```
+
+#### Predefined Events
+
+```swift
+// Common events
+AnalyticsEvent.appOpened
+AnalyticsEvent.screenViewed(name: "Home")
+AnalyticsEvent.buttonTapped(id: "purchase")
+AnalyticsEvent.featureUsed(name: "dark_mode")
+AnalyticsEvent.errorOccurred(error: "Network error", code: "500")
+AnalyticsEvent.purchaseCompleted(productId: "premium", amount: "9.99")
+AnalyticsEvent.searchPerformed(query: "swift")
+AnalyticsEvent.shared(contentType: "article", method: "twitter")
+```
+
+#### GDPR Compliance
+
+```swift
+// Disable analytics (user opts out)
+await AnalyticsManager.shared.setEnabled(false)
+
+// Enable analytics (user opts in)
+await AnalyticsManager.shared.setEnabled(true)
+
+// Check status
+let isEnabled = await AnalyticsManager.shared.analyticsEnabled
+```
+
+#### Custom Provider
+
+```swift
+actor FirebaseAnalyticsProvider: AnalyticsProvider {
+    nonisolated var name: String { "Firebase" }
+    
+    func trackEvent(_ event: AnalyticsEvent) async {
+        Analytics.logEvent(event.name, parameters: event.parameters)
+    }
+    
+    func trackScreen(name: String, parameters: [String: Any]?) async {
+        Analytics.logEvent("screen_view", parameters: parameters)
+    }
+    
+    func setUserProperty(name: String, value: String) async {
+        Analytics.setUserProperty(value, forName: name)
+    }
+    
+    func setUserId(_ userId: String?) async {
+        Analytics.setUserID(userId)
+    }
+}
+```
+
+#### Built-in Providers
+
+**ConsoleAnalyticsProvider** - Debug logging:
+```swift
+await AnalyticsManager.shared.register(provider: ConsoleAnalyticsProvider())
+// Output: 📊 [19:15:32.123] Event: button_tap
+```
+
+**MockAnalyticsProvider** - Testing:
+```swift
+let mock = MockAnalyticsProvider()
+await AnalyticsManager.shared.register(provider: mock)
+
+// Verify in tests
+let events = await mock.trackedEvents
+XCTAssertTrue(await mock.didTrackEvent(named: "button_tap"))
+```
+
+**Features:**
+- Actor-based thread safety
+- Privacy-first (opt-in, GDPR compliant)
+- Multiple provider support
+- Event queueing (max 100 events)
+- User properties & ID management
+- Predefined common events
+- Easy to add custom providers
+
 ## Installation
 
 ### Swift Package Manager
@@ -458,7 +561,7 @@ All extensions and utilities are immediately available.
 
 ## Testing
 
-The package includes comprehensive unit tests (223 tests, 214 passing).
+The package includes comprehensive unit tests (256 tests, 246 passing).
 
 Run tests with:
 
