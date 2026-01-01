@@ -525,6 +525,84 @@ XCTAssertTrue(await mock.didTrackEvent(named: "button_tap"))
 - Predefined common events
 - Easy to add custom providers
 
+### 💰 Monetization (RevenueCat Helper)
+
+Simplified helper for managing in-app purchases with RevenueCat.
+
+> **Note**: This is a lightweight wrapper. For advanced features, use RevenueCat SDK directly.
+
+#### Setup
+
+```swift
+import AppFoundation
+
+@main
+struct MyApp: App {
+    init() {
+        Task {
+            await PurchaseManager.shared.configure(apiKey: "rc_your_api_key")
+        }
+    }
+}
+```
+
+#### Purchase
+
+```swift
+do {
+    let success = try await PurchaseManager.shared.purchase(productId: "monthly_premium")
+    if success {
+        print("Purchase successful!")
+    }
+} catch let error as PurchaseError {
+    print("Purchase failed: \(error.localizedDescription)")
+}
+```
+
+#### Restore Purchases
+
+```swift
+try await PurchaseManager.shared.restorePurchases()
+```
+
+#### Check Subscription
+
+```swift
+// Check if user has any active subscription
+let hasSubscription = await PurchaseManager.shared.hasActiveSubscription
+
+// Check specific entitlement
+let hasPremium = await PurchaseManager.shared.hasEntitlement("premium")
+
+// Get active subscriptions
+let subscriptions = await PurchaseManager.shared.activeSubscriptions
+```
+
+#### User Management
+
+```swift
+// Identify user
+try await PurchaseManager.shared.identify(userId: "user_123")
+
+// Logout (switch to anonymous)
+try await PurchaseManager.shared.logout()
+
+// Get current user ID
+let userId = await PurchaseManager.shared.currentUserId
+```
+
+**Features:**
+- Async/await API
+- Thread-safe with actors
+- Purchase & restore
+- Subscription status checking
+- Entitlement verification
+- User identification
+- Comprehensive error handling
+
+**Dependencies:**
+- RevenueCat SDK 5.0.0+
+
 ## Installation
 
 ### Swift Package Manager

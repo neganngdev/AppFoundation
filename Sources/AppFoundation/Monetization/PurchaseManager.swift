@@ -71,7 +71,8 @@ public actor PurchaseManager {
         }
         
         do {
-            let result = try await Purchases.shared.purchase(product: productId)
+            let product = try await fetchProduct(withId: productId)
+            let result = try await Purchases.shared.purchase(product: product)
             return !result.userCancelled
         } catch let error as ErrorCode {
             throw mapError(error)
@@ -182,7 +183,7 @@ public actor PurchaseManager {
     // MARK: - Error Mapping
     
     private func mapError(_ error: ErrorCode) -> PurchaseError {
-        switch error.code {
+        switch error {
         case .purchaseCancelledError:
             return .cancelled
         case .networkError:
@@ -197,6 +198,14 @@ public actor PurchaseManager {
             return .unknown(error)
         }
     }
+
+    private func fetchProduct(withId productId: String) async throws -> StoreProduct {
+        let products = await Purchases.shared.products([productId])
+        if let product = products.first(where: { $0.productIdentifier == productId }) ?? products.first {
+            return product
+        }
+        throw PurchaseError.productNotFound
+    }
 }
 
 // MARK: - Purchase Manager + Convenience
@@ -206,7 +215,7 @@ public extension PurchaseManager {
     var currentUserId: String {
         get async {
             guard isConfigured else { return "" }
-            return await Purchases.shared.appUserID
+            return Purchases.shared.appUserID
         }
     }
 }

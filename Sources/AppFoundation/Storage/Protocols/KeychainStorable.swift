@@ -12,7 +12,7 @@ import Security
 ///
 /// These options control when the keychain item is accessible and whether
 /// it synchronizes with iCloud Keychain.
-public enum KeychainAccessible: RawRepresentable {
+public enum KeychainAccessible: RawRepresentable, Sendable {
     /// Item is accessible only while the device is unlocked.
     case whenUnlocked
     
