@@ -301,6 +301,127 @@ try storage.save("John", forKey: StorageKeys.username)
 - `KeychainStorable` - Keychain-specific operations
 - `StorageKey` - Type-safe storage keys
 
+### 🌐 Networking Layer
+
+Modern, protocol-based networking with async/await for REST APIs.
+
+#### API Client
+
+Type-safe API client with automatic JSON encoding/decoding:
+
+```swift
+// Define an endpoint
+struct UserEndpoint: APIEndpoint {
+    let userId: String
+    var baseURL: String { "https://api.example.com" }
+    var path: String { "/users/\(userId)" }
+    var method: HTTPMethod { .get }
+}
+
+// Make a request
+let client = DefaultAPIClient()
+let user: User = try await client.request(UserEndpoint(userId: "123"))
+```
+
+#### HTTP Methods
+
+```swift
+enum HTTPMethod {
+    case get, post, put, delete, patch, head, options
+}
+```
+
+**Helper properties:**
+- `supportsBody` - Whether method typically includes a body
+- `isIdempotent` - Whether method is idempotent
+
+#### Network Error Handling
+
+Comprehensive error types with localized descriptions:
+
+```swift
+enum NetworkError {
+    case noInternet
+    case timeout
+    case invalidURL(String)
+    case statusCode(Int, Data?)
+    case decodingError(String)
+    case encodingError(String)
+    case cancelled
+}
+
+// Usage
+do {
+    let data = try await client.request(endpoint)
+} catch let error as NetworkError {
+    switch error {
+    case .noInternet:
+        print("No connection")
+    case .statusCode(let code, _):
+        print("HTTP error: \(code)")
+    default:
+        print(error.localizedDescription)
+    }
+}
+```
+
+#### Request Builder
+
+Utilities for building requests:
+
+```swift
+// Query parameters
+let query = RequestBuilder.encodeQueryParameters(["q": "search", "limit": "10"])
+
+// JSON encoding
+let data = try RequestBuilder.encodeJSON(user)
+
+// Multipart form-data
+let parts = [
+    MultipartFormDataPart.text(name: "title", value: "Photo"),
+    MultipartFormDataPart.image(name: "photo", imageData: data, filename: "photo.jpg")
+]
+let (body, contentType) = RequestBuilder.buildMultipartBody(parts: parts)
+```
+
+#### Authentication
+
+```swift
+// Bearer token
+await client.setBearerToken("your_access_token")
+
+// Custom headers
+await client.setDefaultHeader("X-API-Key", forKey: "api_key")
+```
+
+#### File Uploads
+
+```swift
+let parts = [
+    MultipartFormDataPart.text(name: "description", value: "My file"),
+    MultipartFormDataPart.file(
+        name: "document",
+        data: fileData,
+        filename: "document.pdf",
+        mimeType: "application/pdf"
+    )
+]
+
+let response: UploadResponse = try await client.uploadMultipart(
+    UploadEndpoint(),
+    parts: parts
+)
+```
+
+**Features:**
+- Actor-based thread safety
+- Async/await (no completion handlers)
+- Automatic JSON encoding/decoding
+- HTTP status code validation
+- Bearer token authentication
+- Multipart file uploads
+- Protocol-based for easy mocking
+
 ## Installation
 
 ### Swift Package Manager
@@ -337,7 +458,7 @@ All extensions and utilities are immediately available.
 
 ## Testing
 
-The package includes comprehensive unit tests (197 tests, 191 passing).
+The package includes comprehensive unit tests (223 tests, 214 passing).
 
 Run tests with:
 
