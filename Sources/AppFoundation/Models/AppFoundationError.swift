@@ -18,9 +18,6 @@ public enum AppFoundationError: LocalizedError, Equatable, Sendable {
     /// A configuration error occurred.
     case configuration(ConfigurationError)
     
-    /// A network-related error occurred.
-    case network(NetworkError)
-    
     /// An unknown error occurred.
     case unknown(String)
     
@@ -31,8 +28,6 @@ public enum AppFoundationError: LocalizedError, Equatable, Sendable {
         case .storage(let error):
             return error.localizedDescription
         case .configuration(let error):
-            return error.localizedDescription
-        case .network(let error):
             return error.localizedDescription
         case .unknown(let message):
             return "Unknown error: \(message)"
@@ -47,8 +42,6 @@ public enum AppFoundationError: LocalizedError, Equatable, Sendable {
             return error.failureReason
         case .configuration(let error):
             return error.failureReason
-        case .network(let error):
-            return error.failureReason
         case .unknown:
             return "An unexpected error occurred"
         }
@@ -62,13 +55,12 @@ public enum AppFoundationError: LocalizedError, Equatable, Sendable {
             return error.recoverySuggestion
         case .configuration(let error):
             return error.recoverySuggestion
-        case .network(let error):
-            return error.recoverySuggestion
         case .unknown:
             return "Please try again"
         }
     }
 }
+
 
 // MARK: - Validation Errors
 
@@ -288,89 +280,6 @@ public enum ConfigurationError: LocalizedError, Equatable, Sendable {
             return "Check that the configuration file exists and is valid"
         case .invalidEnvironment:
             return "Use one of: development, staging, production"
-        }
-    }
-}
-
-// MARK: - Network Errors
-
-/// Errors related to network operations.
-public enum NetworkError: LocalizedError, Equatable, Sendable {
-    /// No internet connection available.
-    case noConnection
-    
-    /// The request timed out.
-    case timeout
-    
-    /// The server returned an error.
-    case serverError(statusCode: Int)
-    
-    /// The request was invalid.
-    case badRequest(String)
-    
-    /// Authentication failed.
-    case unauthorized
-    
-    /// The requested resource was not found.
-    case notFound
-    
-    /// The request was cancelled.
-    case cancelled
-    
-    public var errorDescription: String? {
-        switch self {
-        case .noConnection:
-            return "No internet connection"
-        case .timeout:
-            return "Request timed out"
-        case .serverError(let statusCode):
-            return "Server error (\(statusCode))"
-        case .badRequest(let details):
-            return "Bad request: \(details)"
-        case .unauthorized:
-            return "Authentication required"
-        case .notFound:
-            return "Resource not found"
-        case .cancelled:
-            return "Request cancelled"
-        }
-    }
-    
-    public var failureReason: String? {
-        switch self {
-        case .noConnection:
-            return "Your device is not connected to the internet"
-        case .timeout:
-            return "The server took too long to respond"
-        case .serverError:
-            return "The server encountered an error"
-        case .badRequest:
-            return "The request was invalid"
-        case .unauthorized:
-            return "Your session may have expired"
-        case .notFound:
-            return "The requested item does not exist"
-        case .cancelled:
-            return "The request was cancelled"
-        }
-    }
-    
-    public var recoverySuggestion: String? {
-        switch self {
-        case .noConnection:
-            return "Check your internet connection and try again"
-        case .timeout:
-            return "Try again later"
-        case .serverError:
-            return "Try again later"
-        case .badRequest:
-            return "Check your input and try again"
-        case .unauthorized:
-            return "Please sign in again"
-        case .notFound:
-            return "The item may have been removed"
-        case .cancelled:
-            return "Try the request again if needed"
         }
     }
 }
